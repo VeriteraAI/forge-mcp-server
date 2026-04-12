@@ -10,7 +10,7 @@ Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
 {
   "mcpServers": {
     "forge-verify": {
-      "url": "https://veritera.ai/mcp",
+      "url": "https://forge.veritera.ai/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_FORGE_API_KEY"
       }
@@ -25,7 +25,7 @@ Restart Claude Code. Forge verification is now active.
 
 1. Open Claude Cowork settings
 2. Go to **Integrations > MCP Servers**
-3. Add server URL: `https://veritera.ai/mcp`
+3. Add server URL: `https://forge.veritera.ai/mcp`
 4. Add your Forge API key
 5. Done — every action is now verified
 
@@ -41,8 +41,8 @@ No code changes needed. No SDK to install. Just configuration.
 
 ## Get an API Key
 
-Sign up at [veritera.ai](https://veritera.ai) to get your Forge API key.
+Sign up at [veritera.ai](https://forge.veritera.ai) to get your Forge API key.
 
 ## License
 
-MIT — [Veritera AI](https://veritera.ai)
+MIT — [Veritera AI](https://forge.veritera.ai)
