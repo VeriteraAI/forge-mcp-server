@@ -1,10 +1,12 @@
 # forge-mcp-server
 
-Forge Verify [MCP server](https://modelcontextprotocol.io/) for **Claude Code** and **Claude Cowork**. Adds trust verification to every action your Claude agent takes.
+Forge verification for **Claude Code**, **Claude Cowork**, **ChatGPT**, and **Cursor** via MCP. No SDK. No code changes. Just config.
+
+> [Forge](https://github.com/VeriteraAI/forge-python) is the content-blind trust layer for AI agents — verifies actions without seeing your code, prompts, or data. [Learn more →](https://github.com/VeriteraAI/forge-python)
 
 ## Setup — Claude Code
 
-Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
+Add to `~/.claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -19,30 +21,33 @@ Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
 }
 ```
 
-Restart Claude Code. Forge verification is now active.
+Restart Claude Code. Every action is now verified against your policies.
 
 ## Setup — Claude Cowork
 
-1. Open Claude Cowork settings
-2. Go to **Integrations > MCP Servers**
-3. Add server URL: `https://forge.veritera.ai/mcp`
-4. Add your Forge API key
-5. Done — every action is now verified
+1. Open Settings > Integrations > MCP Servers
+2. Add server URL: `https://forge.veritera.ai/mcp`
+3. Add your Forge API key
+4. Done
 
-## What It Does
+## Setup — ChatGPT / Cursor
 
-When your Claude agent tries to use a tool (run a command, edit a file, call an API), the MCP server:
+Same MCP protocol. Add the server URL and API key through each platform's MCP configuration.
+
+## What Happens
+
+When your agent tries to use a tool — run a command, edit a file, call an API — the MCP server:
 
 1. Checks the action against your Forge policies
 2. Returns **approved** or **denied**
 3. Logs a cryptographic proof of the decision
 
-No code changes needed. No SDK to install. Just configuration.
+Denied actions never execute. No code changes needed. No SDK to install.
 
 ## Get an API Key
 
-Sign up at [veritera.ai](https://forge.veritera.ai) to get your Forge API key.
+Sign up at [forge.veritera.ai](https://forge.veritera.ai) — free tier includes 250 verifications.
 
 ## License
 
-MIT — [Veritera AI](https://forge.veritera.ai)
+MIT — [Forge](https://forge.veritera.ai) by Veritera AI
