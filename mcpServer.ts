@@ -175,15 +175,45 @@ async function handleMcpRequest(req: Request, res: Response, urlApiKey?: string)
         let verified = false;
         let reason: string | null = null;
         let evaluatedConstraints: any[] = [];
+        let denialProof: any = null;
         const start = Date.now();
 
         try {
           if (policy) {
             // Load named policy
-            const policyObj = await getPolicyByName(apiKey.id, policy);
+            const policyObj = await getPolicyByName(apiKey.id, policy) as any;
             if (policyObj) {
               const constraints = Array.isArray(policyObj.rules) ? policyObj.rules : [];
-              const evalResult = evaluateConstraints(action, actionParams || null, constraints as any);
+
+              // PRD 4.2.2: Load active override flags and inject as _override_ params
+              const enrichedParams = { ...(actionParams || {}) };
+              try {
+                const { getActiveOverrideFlags } = await import("./apiDb");
+                const flags = await getActiveOverrideFlags(apiKey.id);
+                for (const [flagName, flagValue] of Object.entries(flags)) {
+                  enrichedParams[`_override_${flagName}`] = flagValue;
+                }
+              } catch { /* non-blocking */ }
+
+              // PRD 4.2.7: Load parent policy constraints for composition
+              let parentConstraints: any[] | undefined;
+              if (policyObj.parentPolicyId) {
+                try {
+                  const { getPolicyById } = await import("./apiDb");
+                  const parentPolicy = await getPolicyById(apiKey.id, policyObj.parentPolicyId);
+                  if (parentPolicy && parentPolicy.rules && Array.isArray(parentPolicy.rules)) {
+                    parentConstraints = parentPolicy.rules as any[];
+                  }
+                } catch { /* non-blocking, use child only */ }
+              }
+
+              // Evaluate with full PRD options
+              const evalResult = evaluateConstraints(action, enrichedParams, constraints as any, {
+                mode: policyObj.mode || "blocklist",
+                parentConstraints,
+                policySignature: policyObj.policySignature || undefined,
+                policyHash: policyObj.policyHash || undefined,
+              });
               verified = evalResult.verdict === "approved";
               reason = evalResult.reason;
               evaluatedConstraints = evalResult.evaluated_constraints || [];
@@ -206,6 +236,27 @@ async function handleMcpRequest(req: Request, res: Response, urlApiKey?: string)
 
         const latency = Date.now() - start;
         const proofId = `mcp_${crypto.randomBytes(8).toString("hex")}`;
+        const decisionId = `VER-${crypto.randomBytes(2).toString("hex").toUpperCase().substring(0, 4)}-${crypto.randomBytes(2).toString("hex").toUpperCase().substring(0, 4)}`;
+
+        // PRD 4.3.1: Generate denial proof for DENY verdicts
+        if (!verified) {
+          try {
+            const { generateDenialProof, formatDenialProofForResponse } = await import("./denialProof");
+            const constraintTriggered = evaluatedConstraints.find((c: any) => c.result === "fail");
+            const proof = generateDenialProof({
+              action,
+              agentId: agent_id || "mcp-agent",
+              apiKeyId: apiKey.id,
+              policyName: policy || "none",
+              policyRules: [],
+              constraintType: constraintTriggered?.type || "unknown",
+              constraintDetail: constraintTriggered?.detail || reason || "Policy denied",
+              params: actionParams ?? null,
+              source: "dpe",
+            });
+            denialProof = formatDenialProofForResponse(proof);
+          } catch { /* denial proof generation is non-blocking */ }
+        }
 
         res.json({
           jsonrpc: "2.0",
@@ -215,12 +266,14 @@ async function handleMcpRequest(req: Request, res: Response, urlApiKey?: string)
               text: JSON.stringify({
                 verified,
                 decision: verified ? "ALLOW" : "DENY",
+                decision_id: decisionId,
                 proof_id: proofId,
                 latency_ms: latency,
                 reason,
                 action,
                 agent_id: agent_id || "mcp-agent",
                 evaluated_constraints: evaluatedConstraints,
+                denial_proof: denialProof,
               }),
             }],
           },
