@@ -2,7 +2,7 @@
 
 Forge verification for **Claude Code**, **Claude Cowork**, **ChatGPT**, and **Cursor** via MCP. No SDK. No code changes. Just config.
 
-> [Forge](https://github.com/VeriteraAI/forge-python) is the content-blind trust layer for AI agents — verifies actions without seeing your code, prompts, or data. [Learn more →](https://github.com/VeriteraAI/forge-python)
+> [Forge](https://github.com/veritera-ai/forge-python) is the content-blind trust layer for AI agents — verifies actions without seeing your code, prompts, or data. [Learn more →](https://github.com/veritera-ai/forge-python)
 
 ## Setup — Claude Code
 
